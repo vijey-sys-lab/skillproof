@@ -2,15 +2,17 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { StatCard, SkillTag, ScoreBadge, Avatar, EmptyState, Spinner, Modal } from "../components/ui";
+import { StatCard, SkillTag, ScoreBadge, EmptyState, Spinner, Modal } from "../components/ui";
 import {
   getAllStudents, bookmarkCandidate, unbookmarkCandidate,
-  getBookmarkedStudents, getRecruiterJobs, addJob, updateJob, deleteJob
+  getBookmarkedStudents, getRecruiterJobs, addJob, updateJob,
+  deleteJob, getUserProfile
 } from "../lib/db";
 import toast from "react-hot-toast";
 import {
   Users, Bookmark, Search, Star, ExternalLink, X,
-  Briefcase, Plus, MapPin, Clock, Trash2, Edit3
+  Briefcase, Plus, MapPin, Clock, Trash2, Edit3,
+  ChevronDown, ChevronUp, Eye, User
 } from "lucide-react";
 
 const POPULAR_SKILLS = ["React", "Python", "Node.js", "UI/UX", "TypeScript", "Vue", "Django", "Flutter", "AWS", "ML/AI", "Go", "Rust"];
@@ -93,9 +95,7 @@ export const BrowseTalent = () => {
     }
     if (selectedSkills.length > 0) {
       result = result.filter((s) =>
-        selectedSkills.some((sk) =>
-          s.skills?.some((skill) => skill.toLowerCase().includes(sk.toLowerCase()))
-        )
+        selectedSkills.some((sk) => s.skills?.some((skill) => skill.toLowerCase().includes(sk.toLowerCase())))
       );
     }
     if (sortBy === "score") result.sort((a, b) => (b.skillScore || 0) - (a.skillScore || 0));
@@ -110,17 +110,10 @@ export const BrowseTalent = () => {
   const toggleBookmark = async (studentId) => {
     const isBookmarked = userProfile?.bookmarks?.includes(studentId);
     try {
-      if (isBookmarked) {
-        await unbookmarkCandidate(userProfile.id, studentId);
-        toast.success("Removed from saved");
-      } else {
-        await bookmarkCandidate(userProfile.id, studentId);
-        toast.success("Candidate saved! ✓");
-      }
+      if (isBookmarked) { await unbookmarkCandidate(userProfile.id, studentId); toast.success("Removed from saved"); }
+      else { await bookmarkCandidate(userProfile.id, studentId); toast.success("Candidate saved! ✓"); }
       await refreshProfile();
-    } catch {
-      toast.error("Failed to update bookmark");
-    }
+    } catch { toast.error("Failed to update bookmark"); }
   };
 
   if (loading) return <div className="flex justify-center py-20"><Spinner size={28} /></div>;
@@ -144,21 +137,17 @@ export const BrowseTalent = () => {
             <option value="name">Sort: Name</option>
           </select>
         </div>
-
         <div>
           <p className="text-xs font-medium text-surface-500 mb-2">Filter by skill:</p>
           <div className="flex flex-wrap gap-2">
             {POPULAR_SKILLS.map((skill) => (
               <button key={skill} onClick={() => toggleSkill(skill)}
-                className={`skill-tag cursor-pointer transition-all ${
-                  selectedSkills.includes(skill) ? "skill-tag-blue ring-2 ring-brand-400" : "skill-tag-blue opacity-60 hover:opacity-100"
-                }`}>
+                className={`skill-tag cursor-pointer transition-all ${selectedSkills.includes(skill) ? "skill-tag-blue ring-2 ring-brand-400" : "skill-tag-blue opacity-60 hover:opacity-100"}`}>
                 {skill}
               </button>
             ))}
           </div>
         </div>
-
         {selectedSkills.length > 0 && (
           <div className="flex items-center gap-2">
             <span className="text-xs text-surface-500">Active filters:</span>
@@ -181,12 +170,9 @@ export const BrowseTalent = () => {
             return (
               <div key={student.id} className="card card-interactive p-5 relative">
                 <button onClick={() => toggleBookmark(student.id)}
-                  className={`absolute top-4 right-4 w-8 h-8 rounded-lg flex items-center justify-center transition-all ${
-                    isBookmarked ? "bg-brand-100 text-brand-600" : "bg-surface-50 text-surface-400 hover:bg-brand-50 hover:text-brand-500"
-                  }`}>
+                  className={`absolute top-4 right-4 w-8 h-8 rounded-lg flex items-center justify-center transition-all ${isBookmarked ? "bg-brand-100 text-brand-600" : "bg-surface-50 text-surface-400 hover:bg-brand-50 hover:text-brand-500"}`}>
                   <Bookmark size={15} fill={isBookmarked ? "currentColor" : "none"} />
                 </button>
-
                 <div className="flex items-start gap-3 mb-3 pr-8">
                   <div className="w-11 h-11 rounded-xl overflow-hidden flex-shrink-0">
                     {student.photoURL ? (
@@ -203,26 +189,18 @@ export const BrowseTalent = () => {
                     {student.location && <p className="text-xs text-surface-400">📍 {student.location}</p>}
                   </div>
                   <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-white font-bold text-sm flex-shrink-0 ${
-                    student.skillScore >= 80 ? "bg-emerald-500" :
-                    student.skillScore >= 60 ? "bg-sky-500" :
-                    student.skillScore >= 40 ? "bg-amber-500" : "bg-rose-400"
-                  }`}>
-                    {student.skillScore || 0}
-                  </div>
+                    student.skillScore >= 80 ? "bg-emerald-500" : student.skillScore >= 60 ? "bg-sky-500" : student.skillScore >= 40 ? "bg-amber-500" : "bg-rose-400"
+                  }`}>{student.skillScore || 0}</div>
                 </div>
-
                 {student.bio && <p className="text-xs text-surface-500 line-clamp-2 mb-3">{student.bio}</p>}
-
                 {student.skills?.length > 0 && (
                   <div className="flex flex-wrap gap-1.5 mb-3">
                     {student.skills.slice(0, 4).map((s) => <SkillTag key={s} skill={s} size="sm" />)}
                     {student.skills.length > 4 && <span className="text-xs text-surface-400">+{student.skills.length - 4}</span>}
                   </div>
                 )}
-
                 <div className="flex items-center gap-2 pt-3 border-t border-surface-100">
-                  <Link to={`/user/${student.username}`} target="_blank"
-                    className="btn-primary text-xs py-1.5 px-3 flex-1 justify-center">
+                  <Link to={`/user/${student.username}`} target="_blank" className="btn-primary text-xs py-1.5 px-3 flex-1 justify-center">
                     View Resume
                   </Link>
                   {student.github && (
@@ -265,7 +243,6 @@ export const SavedCandidates = () => {
         <h1 className="page-title">Saved Candidates</h1>
         <p className="page-subtitle">{saved.length} bookmarked candidates</p>
       </div>
-
       {saved.length === 0 ? (
         <EmptyState icon={Bookmark} title="No saved candidates"
           description="Browse the talent pool and bookmark candidates"
@@ -304,6 +281,90 @@ export const SavedCandidates = () => {
   );
 };
 
+// ─── Applicants Modal ─────────────────────────────────────────────────────────
+const ApplicantsModal = ({ job, onClose }) => {
+  const [applicants, setApplicants] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchApplicants = async () => {
+      if (!job.applicants || job.applicants.length === 0) {
+        setLoading(false);
+        return;
+      }
+      const profiles = await Promise.all(
+        job.applicants.map((a) => getUserProfile(a.studentId).catch(() => null))
+      );
+      setApplicants(profiles.filter(Boolean).map((p, i) => ({
+        ...p,
+        appliedAt: job.applicants[i]?.appliedAt,
+      })));
+      setLoading(false);
+    };
+    fetchApplicants();
+  }, [job]);
+
+  return (
+    <Modal isOpen={true} onClose={onClose} title={`Applicants — ${job.title}`} size="lg">
+      {loading ? (
+        <div className="flex justify-center py-8"><Spinner size={24} /></div>
+      ) : applicants.length === 0 ? (
+        <EmptyState icon={User} title="No applicants yet" description="Students haven't applied to this job yet" />
+      ) : (
+        <div className="space-y-3">
+          {applicants.map((applicant) => (
+            <div key={applicant.id} className="flex items-center gap-4 p-4 rounded-xl border border-surface-100 hover:bg-surface-50 transition-colors">
+              {/* Avatar */}
+              <div className="w-12 h-12 rounded-xl overflow-hidden flex-shrink-0">
+                {applicant.photoURL ? (
+                  <img src={applicant.photoURL} alt={applicant.name} className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full bg-gradient-to-br from-brand-400 to-accent-500 flex items-center justify-center text-white font-bold font-display">
+                    {applicant.name?.charAt(0)}
+                  </div>
+                )}
+              </div>
+
+              {/* Info */}
+              <div className="flex-1 min-w-0">
+                <p className="font-semibold text-surface-900">{applicant.name}</p>
+                <p className="text-xs text-surface-400">@{applicant.username}</p>
+                {applicant.skills?.length > 0 && (
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    {applicant.skills.slice(0, 3).map((s) => <SkillTag key={s} skill={s} size="sm" />)}
+                  </div>
+                )}
+                {applicant.appliedAt && (
+                  <p className="text-xs text-surface-400 mt-1">
+                    Applied: {new Date(applicant.appliedAt).toLocaleDateString()}
+                  </p>
+                )}
+              </div>
+
+              {/* Score */}
+              <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold text-sm flex-shrink-0 ${
+                applicant.skillScore >= 80 ? "bg-emerald-500" :
+                applicant.skillScore >= 60 ? "bg-sky-500" :
+                applicant.skillScore >= 40 ? "bg-amber-500" : "bg-rose-400"
+              }`}>
+                {applicant.skillScore || 0}
+              </div>
+
+              {/* Actions */}
+              <div className="flex gap-2 flex-shrink-0">
+                <Link to={`/user/${applicant.username}`} target="_blank"
+                  className="btn-primary text-xs py-1.5 px-3">
+                  View Resume
+                </Link>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </Modal>
+  );
+};
+
 // ─── Manage Jobs ──────────────────────────────────────────────────────────────
 export const RecruiterJobs = () => {
   const { userProfile } = useAuth();
@@ -312,6 +373,7 @@ export const RecruiterJobs = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [editJob, setEditJob] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [viewingApplicants, setViewingApplicants] = useState(null);
   const [form, setForm] = useState({
     title: "", company: "", location: "", type: "full-time",
     description: "", skills: [], salary: "", deadline: ""
@@ -342,20 +404,12 @@ export const RecruiterJobs = () => {
     if (!form.title || !form.company) return toast.error("Title and company required");
     setSaving(true);
     try {
-      if (editJob) {
-        await updateJob(editJob.id, form);
-        toast.success("Job updated!");
-      } else {
-        await addJob({ ...form, recruiterId: userProfile.id, recruiterName: userProfile.name });
-        toast.success("Job posted! 🎉");
-      }
+      if (editJob) { await updateJob(editJob.id, form); toast.success("Job updated!"); }
+      else { await addJob({ ...form, recruiterId: userProfile.id, recruiterName: userProfile.name }); toast.success("Job posted! 🎉"); }
       setModalOpen(false);
       await fetchJobs();
-    } catch {
-      toast.error("Failed to save job");
-    } finally {
-      setSaving(false);
-    }
+    } catch { toast.error("Failed to save job"); }
+    finally { setSaving(false); }
   };
 
   const handleDelete = async (jobId) => {
@@ -374,23 +428,20 @@ export const RecruiterJobs = () => {
           <h1 className="page-title">My Job Postings</h1>
           <p className="page-subtitle">{jobs.length} active postings</p>
         </div>
-        <button onClick={openAdd} className="btn-primary">
-          <Plus size={16} /> Post a Job
-        </button>
+        <button onClick={openAdd} className="btn-primary"><Plus size={16} /> Post a Job</button>
       </div>
 
       <div className="space-y-4">
         {jobs.map((job) => (
           <div key={job.id} className="card p-5">
             <div className="flex items-start justify-between gap-4">
-              <div>
+              <div className="flex-1">
                 <h3 className="font-bold text-surface-900">{job.title}</h3>
                 <p className="text-sm text-surface-600">{job.company}</p>
                 <div className="flex flex-wrap gap-3 mt-2 text-xs text-surface-500">
                   {job.location && <span>📍 {job.location}</span>}
                   {job.type && <span className="px-2 py-0.5 bg-blue-50 text-blue-700 rounded-full">{job.type}</span>}
                   {job.salary && <span className="text-emerald-600">💰 {job.salary}</span>}
-                  <span className="text-surface-400">{job.applicants?.length || 0} applicants</span>
                 </div>
                 {job.skills?.length > 0 && (
                   <div className="flex flex-wrap gap-1.5 mt-2">
@@ -399,7 +450,7 @@ export const RecruiterJobs = () => {
                 )}
               </div>
               <div className="flex gap-2 flex-shrink-0">
-                <button onClick={() => openEdit(job)} className="btn-secondary text-xs py-1.5 px-3">
+                <button onClick={openEdit.bind(null, job)} className="btn-secondary text-xs py-1.5 px-3">
                   <Edit3 size={12} /> Edit
                 </button>
                 <button onClick={() => handleDelete(job.id)} className="btn-danger text-xs py-1.5 px-3">
@@ -407,8 +458,24 @@ export const RecruiterJobs = () => {
                 </button>
               </div>
             </div>
+
+            {/* Applicants section */}
+            <div className="mt-3 pt-3 border-t border-surface-100 flex items-center justify-between">
+              <span className="text-xs text-surface-500">
+                {job.applicants?.length || 0} applicant{(job.applicants?.length || 0) !== 1 ? "s" : ""}
+              </span>
+              {job.applicants?.length > 0 && (
+                <button
+                  onClick={() => setViewingApplicants(job)}
+                  className="flex items-center gap-1.5 text-xs font-semibold text-brand-600 hover:text-brand-800 px-3 py-1.5 rounded-lg bg-brand-50 hover:bg-brand-100 transition-colors"
+                >
+                  <Eye size={13} /> View {job.applicants.length} Applicant{job.applicants.length !== 1 ? "s" : ""}
+                </button>
+              )}
+            </div>
           </div>
         ))}
+
         {jobs.length === 0 && (
           <EmptyState icon={Briefcase} title="No job postings yet"
             description="Post your first job or internship to find the right candidates"
@@ -416,6 +483,12 @@ export const RecruiterJobs = () => {
         )}
       </div>
 
+      {/* Applicants Modal */}
+      {viewingApplicants && (
+        <ApplicantsModal job={viewingApplicants} onClose={() => setViewingApplicants(null)} />
+      )}
+
+      {/* Add/Edit Job Modal */}
       <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)}
         title={editJob ? "Edit Job" : "Post a Job"} size="lg">
         <form onSubmit={handleSave} className="space-y-4">
@@ -451,18 +524,18 @@ export const RecruiterJobs = () => {
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-sm font-medium text-surface-700 mb-1.5">Salary / Stipend</label>
-              <input className="input" placeholder="₹30,000/month or ₹5 LPA" value={form.salary}
+              <input className="input" placeholder="₹30,000/month" value={form.salary}
                 onChange={(e) => setForm({ ...form, salary: e.target.value })} />
             </div>
             <div>
-              <label className="block text-sm font-medium text-surface-700 mb-1.5">Application Deadline</label>
+              <label className="block text-sm font-medium text-surface-700 mb-1.5">Deadline</label>
               <input className="input" type="date" value={form.deadline}
                 onChange={(e) => setForm({ ...form, deadline: e.target.value })} />
             </div>
           </div>
           <div>
             <label className="block text-sm font-medium text-surface-700 mb-1.5">Job Description</label>
-            <textarea className="input" rows={3} placeholder="Describe the role, responsibilities, requirements..."
+            <textarea className="input" rows={3} placeholder="Describe the role..."
               value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
           </div>
           <div>
