@@ -1,7 +1,7 @@
 // src/pages/Auth.js
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { useAuth } from "./AuthContext";
+import { useAuth } from "../context/AuthContext";
 import {
   sendPasswordResetEmail,
   GoogleAuthProvider,
@@ -9,8 +9,8 @@ import {
   signInWithRedirect,
   getRedirectResult,
 } from "firebase/auth";
-import { auth } from "./firebase";
-import { getUserProfile, createUserProfile } from "./db";
+import { auth } from "../lib/firebase";
+import { getUserProfile, createUserProfile } from "../lib/db";
 import toast from "react-hot-toast";
 import { Eye, EyeOff, ArrowLeft, Loader2, Mail, KeyRound, AlertCircle } from "lucide-react";
 
