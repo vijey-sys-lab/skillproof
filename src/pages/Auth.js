@@ -1,7 +1,7 @@
 // src/pages/Auth.js
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "./AuthContext";
 import {
   sendPasswordResetEmail,
   GoogleAuthProvider,
@@ -9,8 +9,8 @@ import {
   signInWithRedirect,
   getRedirectResult,
 } from "firebase/auth";
-import { auth } from "../lib/firebase";
-import { getUserProfile, createUserProfile } from "../lib/db";
+import { auth } from "./firebase";
+import { getUserProfile, createUserProfile } from "./db";
 import toast from "react-hot-toast";
 import { Eye, EyeOff, ArrowLeft, Loader2, Mail, KeyRound, AlertCircle } from "lucide-react";
 
@@ -248,15 +248,17 @@ const handleGoogleSignIn = async (navigate, defaultRole = "student") => {
         photoURL: firebaseUser.photoURL || "",
         isActive: true,
       });
+      // Wait a moment for Firestore to finish writing
+      await new Promise(resolve => setTimeout(resolve, 800));
       profile = await getUserProfile(firebaseUser.uid);
       toast.success("Account created with Google! Welcome 🎉");
     } else {
       toast.success(`Welcome back, ${profile.name?.split(" ")[0]}! 👋`);
     }
 
-    // Redirect based on role
+    // Use window.location for reliable redirect after Google auth
     const routes = { student: "/dashboard", recruiter: "/recruiter", admin: "/admin" };
-    navigate(routes[profile.role] || "/dashboard", { replace: true });
+    window.location.href = routes[profile.role] || "/dashboard";
 
   } catch (err) {
     console.error("Google auth error:", err);
@@ -295,7 +297,7 @@ export const LoginPage = () => {
           profile = await getUserProfile(result.user.uid);
         }
         const routes = { student: "/dashboard", recruiter: "/recruiter", admin: "/admin" };
-        navigate(routes[profile?.role] || "/dashboard", { replace: true });
+        window.location.href = routes[profile?.role] || "/dashboard";
       }
     }).catch(() => {});
   }, []);
