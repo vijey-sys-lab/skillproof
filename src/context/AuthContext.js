@@ -4,7 +4,6 @@ import { auth } from "../lib/firebase";
 import { createUserProfile, getUserProfile } from "../lib/db";
 
 const AuthContext = createContext(null);
-
 export const useAuth = () => {
   const ctx = useContext(AuthContext);
   if (!ctx) throw new Error("useAuth must be used within AuthProvider");
