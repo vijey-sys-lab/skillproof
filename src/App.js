@@ -27,9 +27,20 @@ const GuestOnly = ({ children }) => {
   if (loading) return <LoadingPage />;
   if (user && userProfile) {
     const redirects = { student: "/dashboard", recruiter: "/recruiter", admin: "/admin" };
-    return <Navigate to={redirects[userProfile.role] || "/"} replace />;
+    return <Navigate to={redirects[userProfile.role] || "/dashboard"} replace />;
   }
   return children;
+};
+
+// ── HomeRoute: redirects logged-in users to their dashboard ──
+const HomeRoute = () => {
+  const { user, userProfile, loading } = useAuth();
+  if (loading) return <LoadingPage />;
+  if (user && userProfile) {
+    const redirects = { student: "/dashboard", recruiter: "/recruiter", admin: "/admin" };
+    return <Navigate to={redirects[userProfile.role] || "/dashboard"} replace />;
+  }
+  return <LandingPage />;
 };
 
 const WithSidebar = ({ children }) => <DashboardLayout>{children}</DashboardLayout>;
@@ -37,7 +48,7 @@ const WithSidebar = ({ children }) => <DashboardLayout>{children}</DashboardLayo
 function AppRoutes() {
   return (
     <Routes>
-      <Route path="/" element={<LandingPage />} />
+      <Route path="/" element={<HomeRoute />} />
       <Route path="/user/:username" element={<PublicProfilePage />} />
       <Route path="/leaderboard" element={<LeaderboardPage />} />
       <Route path="/jobs" element={<JobsPage />} />
