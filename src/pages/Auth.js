@@ -1,7 +1,7 @@
 // src/pages/Auth.js
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "./AuthContext";
 import {
   sendPasswordResetEmail,
   GoogleAuthProvider,
@@ -9,8 +9,8 @@ import {
   signInWithRedirect,
   getRedirectResult,
 } from "firebase/auth";
-import { auth } from "../lib/firebase";
-import { getUserProfile, createUserProfile } from "../lib/db";
+import { auth } from "./firebase";
+import { getUserProfile, createUserProfile } from "./db";
 import toast from "react-hot-toast";
 import { Eye, EyeOff, ArrowLeft, Loader2, Mail, KeyRound, AlertCircle } from "lucide-react";
 
@@ -312,8 +312,12 @@ export const LoginPage = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      await login(form.email.trim(), form.password);
-      // Navigation handled by useEffect above when userProfile loads
+      const result = await login(form.email.trim(), form.password);
+      toast.success("Welcome back!");
+      // Navigate immediately using profile from login
+      const routes = { student: "/dashboard", recruiter: "/recruiter", admin: "/admin" };
+      const role = result?.profile?.role || "student";
+      navigate(routes[role] || "/dashboard", { replace: true });
     } catch (err) {
       console.log("LOGIN ERROR:", err.code);
 
