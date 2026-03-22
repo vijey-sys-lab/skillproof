@@ -9,14 +9,55 @@ export const Spinner = ({ size = 20, className = "" }) => (
 
 // ─── Loading Page ────────────────────────────────────────────────────────────
 export const LoadingPage = () => (
-  <div className="min-h-screen flex items-center justify-center bg-surface-50">
-    <div className="flex flex-col items-center gap-4">
-      <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-brand-500 to-accent-500 flex items-center justify-center animate-pulse">
-        <span className="text-white font-bold text-xl font-display">S</span>
-      </div>
-      <Spinner size={24} />
-      <p className="text-surface-500 text-sm font-medium">Loading SkillProof…</p>
+  <div className="min-h-screen flex items-center justify-center bg-white overflow-hidden relative">
+    {/* Animated background orbs */}
+    <div className="absolute inset-0 pointer-events-none">
+      <div className="absolute top-1/4 left-1/4 w-64 h-64 rounded-full opacity-10 animate-orb"
+        style={{ background: "radial-gradient(circle, #38bdf8, transparent)" }} />
+      <div className="absolute bottom-1/4 right-1/4 w-80 h-80 rounded-full opacity-10 animate-orb"
+        style={{ background: "radial-gradient(circle, #d946ef, transparent)", animationDelay: "2s" }} />
+      <div className="absolute top-1/2 left-1/2 w-48 h-48 rounded-full opacity-10 animate-orb"
+        style={{ background: "radial-gradient(circle, #10b981, transparent)", animationDelay: "4s" }} />
     </div>
+
+    <div className="flex flex-col items-center gap-6 relative z-10">
+      {/* Favicon with ring animation */}
+      <div className="relative">
+        {/* Outer pulsing ring */}
+        <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-sky-400 to-violet-500 opacity-30 animate-ping" style={{ animationDuration: "1.5s" }} />
+        {/* Middle ring */}
+        <div className="absolute -inset-2 rounded-3xl bg-gradient-to-br from-sky-400 to-violet-500 opacity-15 animate-pulse" />
+        {/* Favicon image */}
+        <div className="relative w-20 h-20 rounded-3xl overflow-hidden shadow-2xl animate-float"
+          style={{ animation: "float 2s ease-in-out infinite" }}>
+          <img src="/image/favicon.png" alt="SkillProof" className="w-full h-full object-cover" />
+        </div>
+      </div>
+
+      {/* Brand name */}
+      <div className="text-center animate-fade-in" style={{ animationDelay: "0.2s" }}>
+        <h1 className="text-2xl font-bold text-surface-900 font-display tracking-tight">SkillProof</h1>
+        <p className="text-sm text-surface-400 mt-1">Prove What You Can Do</p>
+      </div>
+
+      {/* Animated dots loader */}
+      <div className="flex items-center gap-2">
+        {[0, 1, 2, 3].map((i) => (
+          <div key={i} className="w-2 h-2 rounded-full bg-gradient-to-br from-sky-500 to-violet-500"
+            style={{
+              animation: "bounce 1.2s ease-in-out infinite",
+              animationDelay: `${i * 0.15}s`,
+            }} />
+        ))}
+      </div>
+    </div>
+
+    <style>{`
+      @keyframes bounce {
+        0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+        30% { transform: translateY(-10px); opacity: 1; }
+      }
+    `}</style>
   </div>
 );
 
