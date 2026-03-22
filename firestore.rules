@@ -1,0 +1,92 @@
+// firestore.rules
+// Deploy with: firebase deploy --only firestore:rules
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ─── Helper Functions ───────────────────────────────────────────────────
+    function isAuth() {
+      return request.auth != null;
+    }
+
+    function isOwner(uid) {
+      return isAuth() && request.auth.uid == uid;
+    }
+
+    function getRole() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
+    }
+
+    function isAdmin() {
+      return isAuth() && getRole() == 'admin';
+    }
+
+    function isRecruiter() {
+      return isAuth() && getRole() == 'recruiter';
+    }
+
+    function isStudent() {
+      return isAuth() && getRole() == 'student';
+    }
+
+    // ─── Users Collection ───────────────────────────────────────────────────
+    match /users/{userId} {
+      // Anyone can read public student profiles
+      allow read: if true;
+
+      // Only the owner can create their own profile
+      allow create: if isOwner(userId);
+
+      // Owner can update their own profile; admin can update any
+      allow update: if isOwner(userId) || isAdmin();
+
+      // Only admin can delete users
+      allow delete: if isAdmin();
+    }
+
+    // ─── Projects Collection ────────────────────────────────────────────────
+    match /projects/{projectId} {
+      // Anyone can read approved projects; auth users can read all
+      allow read: if resource.data.status == 'approved' || isAuth();
+
+      // Students can create projects
+      allow create: if isStudent();
+
+      // Owner can update their own project; admin can update any
+      allow update: if (isAuth() && request.auth.uid == resource.data.authorId) || isAdmin();
+
+      // Owner or admin can delete
+      allow delete: if (isAuth() && request.auth.uid == resource.data.authorId) || isAdmin();
+    }
+
+    // ─── Submissions Collection ─────────────────────────────────────────────
+    match /submissions/{submissionId} {
+      // Students can read their own; admin can read all
+      allow read: if isAdmin() || (isAuth() && request.auth.uid == resource.data.authorId);
+
+      // Students can create
+      allow create: if isStudent();
+
+      // Admin can update (approve/reject)
+      allow update: if isAdmin();
+
+      allow delete: if isAdmin();
+    }
+
+    // ─── Scores Collection ──────────────────────────────────────────────────
+    match /scores/{scoreId} {
+      // All authenticated users can read scores
+      allow read: if isAuth();
+
+      // Only admin can create/update/delete scores
+      allow write: if isAdmin();
+    }
+
+    // ─── Skills Collection (optional) ───────────────────────────────────────
+    match /skills/{skillId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+  }
+}
