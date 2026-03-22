@@ -1,13 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
-import {
-  createUserWithEmailAndPassword,
-  signInWithEmailAndPassword,
-  signOut,
-  onAuthStateChanged,
-  updateProfile,
-} from "firebase/auth";
-import { auth } from "./firebase";
-import { createUserProfile, getUserProfile } from "./db";
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile } from "firebase/auth";
+import { auth } from "../lib/firebase";
+import { createUserProfile, getUserProfile } from "../lib/db";
 
 const AuthContext = createContext(null);
 
@@ -48,14 +42,9 @@ export const AuthProvider = ({ children }) => {
     const cred = await createUserWithEmailAndPassword(auth, email, password);
     await updateProfile(cred.user, { displayName: name });
     await createUserProfile(cred.user.uid, {
-      name,
-      email,
-      role,
+      name, email, role,
       username: username || email.split("@")[0],
-      bio: "",
-      skills: [],
-      github: "",
-      portfolio: "",
+      bio: "", skills: [], github: "", portfolio: "",
       ...(role === "recruiter" && { company: "" }),
       avatar: `https://api.dicebear.com/7.x/shapes/svg?seed=${cred.user.uid}`,
     });
@@ -66,7 +55,6 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     const cred = await signInWithEmailAndPassword(auth, email, password);
-    // Immediately load profile after login
     const profile = await getUserProfile(cred.user.uid);
     setUserProfile(profile);
     return { cred, profile };
@@ -78,9 +66,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider
-      value={{ user, userProfile, loading, signup, login, logout, refreshProfile }}
-    >
+    <AuthContext.Provider value={{ user, userProfile, loading, signup, login, logout, refreshProfile }}>
       {children}
     </AuthContext.Provider>
   );
