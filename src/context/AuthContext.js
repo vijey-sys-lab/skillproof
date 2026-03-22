@@ -6,8 +6,8 @@ import {
   onAuthStateChanged,
   updateProfile,
 } from "firebase/auth";
-import { auth } from "../lib/firebase";
-import { createUserProfile, getUserProfile } from "../lib/db";
+import { auth } from "./firebase";
+import { createUserProfile, getUserProfile } from "./db";
 
 const AuthContext = createContext(null);
 
@@ -65,7 +65,11 @@ export const AuthProvider = ({ children }) => {
   };
 
   const login = async (email, password) => {
-    return await signInWithEmailAndPassword(auth, email, password);
+    const cred = await signInWithEmailAndPassword(auth, email, password);
+    // Immediately load profile after login
+    const profile = await getUserProfile(cred.user.uid);
+    setUserProfile(profile);
+    return { cred, profile };
   };
 
   const logout = async () => {
